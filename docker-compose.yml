@@ -1,0 +1,37 @@
+version: "2"
+services:
+  nginx:
+      image: nginx:latest
+      ports:
+          - '80:80'
+      volumes:
+          - ./devops/nginx:/etc/nginx/conf.d
+          - ./devops/logs/nginx:/var/log/nginx
+          - ${WORDPRESS_PATH}:/var/www/html
+      links:
+          - wordpress
+      restart: always
+  mysql:
+      image: mariadb
+      ports:
+          - '3306:3306'
+      volumes:
+          - ${DATABASE_PATH}:/var/lib/mysql
+      environment:
+          - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      restart: always
+  wordpress:
+      image: wordpress:${WORDPRESS_CONTAINER_TAG}
+      ports:
+          - '9000:9000'
+      volumes:
+          - ${WORDPRESS_PATH}:/var/www/html
+          - ./devops/php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
+      environment:
+          - WORDPRESS_DB_NAME=${MYSQL_DB_NAME}
+          - WORDPRESS_TABLE_PREFIX=${MYSQL_TABLE_PREFIX}
+          - WORDPRESS_DB_HOST=${MYSQL_DB_HOST}
+          - WORDPRESS_DB_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      links:
+          - ${MYSQL_DB_HOST}
+      restart: always
